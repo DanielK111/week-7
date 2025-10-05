@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After School Class Lesson</title>
+    <link rel="stylesheet" href="./src/assets/css/styles.css">
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>{{ sitename }}</h1>
+            <div class="buttons">
+                <button class="btn checkout" v-on:click="showCart" v-if="cartItemsCount > 0">
+                    Cart
+                </button>
+                <button class="btn checkout" disabled="disabled" v-else>
+                    Cart
+                </button>
+                <button class="btn checkout" v-on:click="order" v-show="!showLessons" id="checkoutBtn">
+                        {{ cartItemsCount }}
+                        <span style="width: 15px; height: 15px;"><svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            viewBox='0 0 20 20'
+                            fill='currentColor'
+                        >
+                            <path d='M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' />
+                        </svg></span> Pay now!
+                </button>
+            </div>
+        </header>
+        <div v-if="showLessons">
+            <div>
+                <select v-model="sortBy">
+                    <option disabled value="">Sort By</option>
+                    <option v-for="sortOption in sortOptions">
+                        {{sortOption}}
+                    </option>
+                </select>
+                <select v-model="sortVal">
+                    <option disabled value="">Coose an option</option>
+                    <option value="ASC">Ascending</option>
+                    <option value="DEC">Descending</option>
+                </select>
+                <center>
+                    <span><h2>Lessons</h2></span>
+                </center>
+            </div>
+            <div class="grid">
+                <div class="container" v-for="product in sortedLessons" :key="product.id">
+                    <main class="main">
+                        <figure>
+                            <!-- bind 'src' attr to 'product.image' in 'data' -->
+                            <img v-bind:src="'http://localhost:8080/' + product.image" width="60">
+                        </figure>
+                        <div>
+                            <p><span>Subject: </span><span v-text="product.subject"></span></p>
+                            <p><span>Location: </span><span v-text="product.location"></span></p>
+                            <!-- The double curly brackets is used instead of 'v-text' -->
+                            <p>Price: {{product.price}}</p>
+                        </div>
+                    </main>
+                    <div class="buttons">
+                        <button type="button" class="btn" v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                            <span v-if="cartProductCount(product) > 0">{{ cartProductCount(product) }}</span> Add To Cart
+                        </button>
+                        <button type="button" class="btn" disabled="disabled" v-else>
+                            Add To Cart
+                        </button>
+                        <div style="margin: auto; width: 8rem;">
+                            <span v-if="leftProduct(product) === 0">All out!</span>
+                            <span v-else-if="leftProduct(product) <= 2">Only {{ leftProduct(product) }} left!</span>
+                            <span v-else>Buy now!</span>
+                        </div>
+                    </div>
+                    <div class="rating">
+                        <span v-for="n in product.rating"><i class="fa-solid fa-star" style="color: #ffbb00;"></i></span>
+                        <span v-for="n in 5 - product.rating"><i class="fa-regular fa-star"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End of v-if="showLessons" -->
+        <div v-else>
+            <center>
+                <span><h2>Cart</h2></span>
+            </center>
+            <div class="grid">
+                <div class="container" v-for="product in cart" :key="product.id">
+                    <main class="main">
+                        <figure>
+                            <!-- bind 'src' attr to 'product.image' in 'data' -->
+                            <img v-bind:src="'http://localhost:8080/' + product.image" width="60">
+                        </figure>
+                        <div>
+                            <p><span>Subject: </span><span v-text="product.subject"></span></p>
+                            <p><span>Location: </span><span v-text="product.location"></span></p>
+                            <p><span>Quantity: </span>{{product.quantity}}</p>
+                            <!-- The double curly brackets is used instead of 'v-text' -->
+                            <p>Price: {{product.price}}</p>
+                        </div>
+                    </main>
+                    <button type="button" class="btn remove" v-on:click="removeFromCart(product)">
+                        Delete from Cart
+                    </button>
+                </div>
+            </div>
+            <!-- Checkout page -->
+            <center>
+                <span><h2>Checkout</h2></span>
+            </center>
+            <h2>Your Information</h2>
+            <div class="container" style="margin: 0.5rem; padding: 1.75rem;">
+                <div class="fullname">
+                    <div class="input">
+                        <label for="firstname">First Name:</label>
+                        <input v-model.trim="information.firstname" id="firstname">
+                    </div>
+                    <div class="input">
+                        <label for="lastname">Last Name:</label>
+                        <input v-model.trim="information.lastname" id="lastname">
+                    </div>
+                </div>
+                <div class="input">
+                    <label for="address">Address:</label>
+                    <input v-model="information.address" id="address">
+                </div>
+                <div class="input">
+                    <label for="city">City:</label>
+                    <input v-model="information.city" id="city">
+                </div>
+                <div class="state-zip">
+                    <div class="input">
+                        <label for="state">State:</label>
+                        <select v-model="information.state" id="state">
+                            <option disabled value="">State</option>
+                            <option v-for="state in information.states" :key="state" :value="state">
+                                {{state}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="input">
+                        <label for="zip">Zip / Postal Code:</label>
+                        <input v-model="information.zip" id="zip">
+                    </div>
+                </div>
+                <div class="input">
+                    <label for="phone">Mobile no:</label>
+                    <input v-model.number="information.phone" type="number" id="phone">
+                </div>
+                <div class="gift-method">
+                    <div>
+                        <input type="checkbox" value="true"
+                            v-model="information.gift" id="gift"
+                            v-bind:true-value="information.sendGift"
+                            v-bind:false-value="information.dontSendGift"
+                        >
+                        <label for="gift">Ship as Gift?</label>
+                    </div>
+                    <div>
+                        <input type="radio" v-model="information.method" id="home" value="Home">
+                        <label for="home">Home</label>
+                        <input type="radio" v-model="information.method" id="business" value="Business">
+                        <label for="business">Business</label>
+                    </div>
+                </div>    
+            </div> <!-- End of class="container" -->
+            <div style="padding: 0.75rem;">
+                <h2>Entered Information</h2>
+                <p>First Name: {{information.firstname}}</p>
+                <p>Last Name: {{information.lastname}}</p>
+                <p>Address: {{information.address}}</p>
+                <p>City: {{information.city}}</p>
+                <p>State: {{information.state}}</p>
+                <p>PostCode: {{information.zip}}</p>
+                <p>Mobile no: {{information.phone}}</p>
+                <p>Gift: {{information.gift}}</p>
+                <p>Method: {{information.method}}</p>
+            </div>
+        </div> <!-- End of v-else -->
+    </div> <!-- End of id="app" -->
+
+    <script src="./src/main.js" type="module"></script>
+</body>
+</html>
